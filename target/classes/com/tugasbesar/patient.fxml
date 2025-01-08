@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.Scene?>
+<?import javafx.stage.Stage?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.tugasbesar.PatientController">
+    <children>
+        <Label text="Nama:" layoutX="14.0" layoutY="14.0"/>
+        <TextField fx:id="txtName" layoutX="70.0" layoutY="10.0" />
+
+        <Label text="Umur:" layoutX="14.0" layoutY="50.0"/>
+        <TextField fx:id="txtAge" layoutX="70.0" layoutY="46.0" />
+
+        <Label text="Alamat:" layoutX="14.0" layoutY="86.0"/>
+        <TextField fx:id="txtAddress" layoutX="70.0" layoutY="82.0" />
+
+        <Button text="Tambah Pasien" layoutX="14.0" layoutY="120.0" onAction="#addPatient"/>
+        <Button text="Hapus Pasien" layoutX="120.0" layoutY="120.0" onAction="#deletePatient"/>
+
+        <TableView fx:id="tablePatient" layoutX="14.0" layoutY="160.0" prefWidth="400.0" prefHeight="200.0">
+            <columns>
+                <TableColumn fx:id="colName" text="Name" prefWidth="150.0"/>
+                <TableColumn fx:id="colAge" text="Age" prefWidth="100.0"/>
+                <TableColumn fx:id="colAddress" text="Address" prefWidth="150.0"/>
+            </columns>
+        </TableView>
+    </children>
+</AnchorPane>

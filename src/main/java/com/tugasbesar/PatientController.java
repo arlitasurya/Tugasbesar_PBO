@@ -63,6 +63,7 @@ public class PatientController {
         connectDatabase();
         setupTableColumns();
         loadData();
+        eventHandler();
     }
 
     private void connectDatabase() {
@@ -93,6 +94,20 @@ public class PatientController {
             e.printStackTrace();
         }
         tablePatient.setItems(PatientList);
+    }
+
+    private void eventHandler(){
+        tablePatient.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 1) { // Menggunakan single click untuk memilih
+                Patient selectedPatient = tablePatient.getSelectionModel().getSelectedItem();
+                if (selectedPatient != null) {
+                    // Memasukkan data ke TextField
+                    txtName.setText(selectedPatient.getName());
+                    txtAge.setText(String.valueOf(selectedPatient.getAge())); // Mengonversi int ke String
+                    txtAddress.setText(selectedPatient.getAddress());
+                }
+            }
+        });
     }
 
     @FXML
@@ -127,5 +142,39 @@ public class PatientController {
                 e.printStackTrace();
             }
         }
+    }
+
+    @FXML
+    private void editPatient() {
+        Patient selectedPatient = tablePatient.getSelectionModel().getSelectedItem();
+        if (selectedPatient != null) {
+            // Mengambil data dari TextField
+            String newName = txtName.getText();
+            int newAge;
+            String newAddress = txtAddress.getText();
+
+            // Mengonversi umur dari String ke int dan menangani kesalahan
+            try {
+                newAge = Integer.parseInt(txtAge.getText());
+            } catch (NumberFormatException e) {
+                return; // Keluar dari metode jika umur tidak valid
+            }
+
+            try {
+                // Memperbarui data pasien di database
+                PreparedStatement preparedStatement = connection
+                        .prepareStatement("UPDATE patient SET name = ?, age = ?, address = ? WHERE id = ?");
+                preparedStatement.setString(1, newName);
+                preparedStatement.setInt(2, newAge);
+                preparedStatement.setString(3, newAddress);
+                preparedStatement.setInt(4, selectedPatient.getId());
+                preparedStatement.executeUpdate();
+
+                // Memuat ulang data setelah edit
+                loadData();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } 
     }
 }

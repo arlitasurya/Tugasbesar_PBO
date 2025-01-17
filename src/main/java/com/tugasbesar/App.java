@@ -9,9 +9,9 @@ import javafx.stage.Stage;
 public class App extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("patient.fxml"));
-        primaryStage.setTitle("Aplikasi CRUD Pasien");
-        primaryStage.setScene(new Scene(root, 450, 400));
+        Parent root = FXMLLoader.load(getClass().getResource("primary.fxml"));
+        primaryStage.setTitle("Halaman Utama");
+        primaryStage.setScene(new Scene(root, 400, 300));
         primaryStage.show();
     }
 

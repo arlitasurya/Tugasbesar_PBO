@@ -1,114 +1,56 @@
 package com.tugasbesar;
 
-
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.sql.*;
 
 public class AppointmentController {
     @FXML
-    private TextField idField;
+    private TextField txtDokter;
     @FXML
-    private TextField patientIdField;
+    private TextField txtPasien;
     @FXML
-    private TextField doctorIdField;
+    private TextField txtTanggal;
     @FXML
-    private TextField dateField;
+    private TextField txtWaktu;
     @FXML
-    private TextField timeField;
-    @FXML
-    private TextField notesField;
-    @FXML
-    private ListView<Appointment> appointmentListView;
-    @FXML
-    private Button addButton;
-    @FXML
-    private Button updateButton;
-    @FXML
-    private Button deleteButton;
-
-    private ObservableList<Appointment> appointments = FXCollections.observableArrayList();
+    private TextField txtNotes;
 
     @FXML
-    public void initialize() {
-        appointmentListView.setItems(appointments);
-        appointmentListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                idField.setText(String.valueOf(newValue.getId()));
-                patientIdField.setText(String.valueOf(newValue.getPatientId()));
-                doctorIdField.setText(String.valueOf(newValue.getDoctorId()));
-                dateField.setText(newValue.getDate().toString());
-                timeField.setText(newValue.getTime().toString());
-                notesField.setText(newValue.getNotes());
-            }
-        });
-    }
-
+    private TableView<Appointment> tableAppointment;
     @FXML
-    private void addAppointment() {
-        int id = Integer.parseInt(idField.getText());
-        int patientId = Integer.parseInt(patientIdField.getText());
-        int doctorId = Integer.parseInt(doctorIdField.getText());
-        LocalDate date = LocalDate.parse(dateField.getText());
-        LocalTime time = LocalTime.parse(timeField.getText());
-        String notes = notesField.getText();
-        appointments.add(new Appointment(id, patientId, doctorId, date, time, notes));
-        clearFields();
-    }
-
+    private TableColumn<Appointment, Integer> colPatient_id;
     @FXML
-    private void updateAppointment() {
-        Appointment selectedAppointment = appointmentListView.getSelectionModel().getSelectedItem();
-        if (selectedAppointment != null) {
-            selectedAppointment.setPatientId(Integer.parseInt(patientIdField.getText()));
-            selectedAppointment.setDoctorId(Integer.parseInt(doctorIdField.getText()));
-            selectedAppointment.setDate(LocalDate.parse(dateField.getText()));
-            selectedAppointment.setTime(LocalTime.parse(timeField.getText()));
-            selectedAppointment.setNotes(notesField.getText());
-            appointmentListView.refresh();
-            clearFields();
-        }
-    }
-
+    private TableColumn<Appointment, Integer> colDoctor_id;
     @FXML
-    private void deleteAppointment() {
-        Appointment selectedAppointment = appointmentListView.getSelectionModel().getSelectedItem();
-        if (selectedAppointment != null) {
-            appointments.remove(selectedAppointment);
-            clearFields();
-        }
-    }
+    private TableColumn<Appointment, String> colDate;
+    @FXML
+    private TableColumn<Appointment, String> colTime;
+    @FXML
+    private TableColumn<Appointment, String> colNotes;
 
-    private void clearFields() {
-        idField.clear();
-        patientIdField.clear();
-        doctorIdField.clear();
-        dateField.clear();
-        timeField.clear();
-        notesField.clear();
-    }
+    private Connection connection;
+    private ObservableList<Appointment> AppointmentList;
 
+    // Model Patient
     public static class Appointment {
         private int id;
-        private int patientId;
-        private int doctorId;
-        private LocalDate date;
-        private LocalTime time;
+        private Integer pasienId;
+        private Integer dokterId;
+        private String tanggal;
+        private String waktu;
         private String notes;
 
-        public Appointment(int id, int patientId, int doctorId, LocalDate date, LocalTime time, String notes) {
+        public Appointment(int id, int pasienId, int dokterId, String tanggal, String waktu, String notes) {
             this.id = id;
-            this.patientId = patientId;
-            this.doctorId = doctorId;
-            this.date = date;
-            this.time = time;
+            this.dokterId = dokterId;
+            this.pasienId = pasienId;
+            this.tanggal = tanggal;
+            this.waktu = waktu;
             this.notes = notes;
         }
 
@@ -116,48 +58,66 @@ public class AppointmentController {
             return id;
         }
 
-        public void setId(int id) {
-            this.id = id;
+        
+        public int getpasienId() {
+            return pasienId;
         }
 
-        public int getPatientId() {
-            return patientId;
+        public int getdokterId() {
+            return dokterId;
         }
 
-        public void setPatientId(int patientId) {
-            this.patientId = patientId;
+        public String getTanggal(){
+            return tanggal;
         }
 
-        public int getDoctorId() {
-            return doctorId;
+        public String getWaktu(){
+            return waktu;
         }
 
-        public void setDoctorId(int doctorId) {
-            this.doctorId = doctorId;
-        }
-
-        public LocalDate getDate() {
-            return date;
-        }
-
-        public void setDate(LocalDate date) {
-            this.date = date;
-        }
-
-        public LocalTime getTime() {
-            return time;
-        }
-
-        public void setTime(LocalTime time) {
-            this.time = time;
-        }
-
-        public String getNotes() {
+        public String getNotes(){
             return notes;
         }
+    }
 
-        public void setNotes(String notes) {
-            this.notes = notes;
+    public void initialize() {
+        AppointmentList = FXCollections.observableArrayList();
+        connectDatabase();
+        setupTableColumns();
+        loadData();
+    }
+
+    private void connectDatabase() {
+        try {
+            connection = DriverManager.getConnection("jdbc:sqlite:clinic.db");
+            System.out.println("connection successfull");
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+    }
+
+    private void setupTableColumns() {
+        colPatient_id.setCellValueFactory(new PropertyValueFactory<>("patient_id"));
+        colDoctor_id.setCellValueFactory(new PropertyValueFactory<>("doctor_id"));
+        colDate.setCellValueFactory(new PropertyValueFactory<>("date"));
+        colTime.setCellValueFactory(new PropertyValueFactory<>("time"));
+        colNotes.setCellValueFactory(new PropertyValueFactory<>("notes"));
+
+    }
+
+    private void loadData() {
+        AppointmentList.clear();
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM appointments");
+            while (resultSet.next()) {
+                AppointmentList
+                        .add(new Appointment(resultSet.getInt("id"), resultSet.getInt("patient_id"),
+                                resultSet.getInt("doctor_id"),resultSet.getString("date"),resultSet.getString("time"),resultSet.getString("notes")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        tableAppointment.setItems(AppointmentList);
     }
 }
